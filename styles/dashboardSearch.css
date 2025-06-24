@@ -1,0 +1,22 @@
+/* dashboardSearch.css */
+.search-results {
+  display: flex;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  background: white;
+  margin-top: 5px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.search-results div {
+  padding: 10px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-results div:hover {
+  background: #f9f9f9;
+}

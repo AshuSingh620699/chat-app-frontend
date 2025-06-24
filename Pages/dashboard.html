@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatApp Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" />
+  <link rel="stylesheet" href="../styles/dashboard.css" />
+  <link href='https://cdn.boxicons.com/fonts/basic/boxicons.min.css' rel='stylesheet'>
+</head>
+
+<body>
+  <audio id="notifysound" src="../public/sounds/standard-whatsapp.mp3" preload="auto"></audio>
+  <div class="dashboard-container">
+    <div class="sidebar">
+      <h2 class="logo">ChatApp</h2>
+      <div class="sidebar-user-profile">
+        <img id="userAvatar" src="" alt="Your Profile Image" />
+        <div>
+          <h3 id="userName">Username</h3>
+          <p id="userBio">Bio goes here...</p>
+        </div>
+      </div>
+
+
+      <div class="search-section">
+        <input type="text" id="searchInput" placeholder="Search users by username or email...">
+        <div id="searchResults" class="search-results"></div>
+        <div id="profileCard" class="profile-card hidden"></div>
+      </div>
+
+      <div class="friends-list" id="friendsList">
+        <!-- Friends will be listed here -->
+      </div>
+
+      <div class="friend-requests" id="friendRequests">
+        <h4>Friend Requests</h4>
+        <!-- Requests will be listed here -->
+      </div>
+      <button onclick="openModal()" class="logout">Edit Profile</button>
+      <button onclick="logout()" class="logout">Logout</button>
+    </div>
+
+    <div class="chat-area">
+      <div class="chat-header" id="chatHeader">
+
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <!-- Messages will appear here -->
+      </div>
+      <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Type your message..." />
+        <button id="sendBtn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="profileModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Update Profile</h2>
+      <form id="profileUpdateForm">
+        <label>Username</label>
+        <input type="text" id="updateUsername" name="username" required>
+
+        <label>Bio</label>
+        <textarea id="updateBio" name="bio" rows="3"></textarea>
+
+        <label>Profile Image</label>
+        <input type="file" id="updateImage" name="image" accept="image/*">
+
+        <div class="modal-buttons">
+          <button type="submit">Save</button>
+          <button type="button" onclick="closeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="chatInfoModal" class="modalm hidden">
+    <div class="modal-contentm">
+      <div class="modal-sidebar">
+        <button onclick="showTab('overview')">Overview</button>
+        <button onclick="showTab('media')">Media</button>
+        <button onclick="showTab('files')">Files</button>
+        <button onclick="showTab('links')">Links</button>
+        <button onclick="showTab('events')">Events</button>
+        <button onclick="showTab('encryption')">Encryption</button>
+        <button onclick="closeModalm()">Close</button>
+      </div>
+      <div class="modal-tab-content">
+        <div id="overview" class="tab">Loading...</div>
+        <div id="media" class="tab hidden">No media yet</div>
+        <div id="files" class="tab hidden">No files yet</div>
+        <div id="links" class="tab hidden">No links yet</div>
+        <div id="events" class="tab hidden">No events yet</div>
+        <div id="encryption" class="tab hidden">End-to-end encrypted</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notification-container" id="notificationContainer"></div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="../scripts/dashboard.js"></script>
+  <script src="../scripts/dashboardSearch.js"></script>
+  <script src="../scripts/dashboardupdateprofile.js"></script>
+</body>
+
+</html>
