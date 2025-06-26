@@ -7,7 +7,7 @@ document.getElementById('signinForm').addEventListener("submit", async (e) => {
 	const alertBox = document.getElementById("alertBox")
 
 	try {
-		const res = await fetch('http://localhost:5050/api/auth/login', {
+		const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/auth/login', {
 			method: "POST",
 			headers: {
 				"Content-type": "application/json"
@@ -54,7 +54,7 @@ document.getElementById('signupForm').addEventListener("submit", async (e) => {
 	}
 
 	try {
-		const response = await fetch("http://localhost:5050/api/auth/register", {
+		const response = await fetch("https://chat-app-backend-vf79.onrender.com/api/auth/register", {
 			method: "POST",
 			headers: {
 				"Content-type": "application/json"
