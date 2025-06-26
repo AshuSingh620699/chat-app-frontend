@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchUserProfile();
 })
 async function fetchUserProfile() {
-  const res = await fetch('http://localhost:5050/api/profile/me', {
+  const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/profile/me', {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -22,9 +22,9 @@ function populateOwnProfile(user) {
   document.getElementById("userName").textContent = user.username || "Your Name";
   document.getElementById("userBio").textContent = user.bio || "No bio set.";
   if(user.profileImage){
-  document.getElementById("userAvatar").src = `http://localhost:5050${user.profileImage}`
+  document.getElementById("userAvatar").src = `https://chat-app-backend-vf79.onrender.com${user.profileImage}`
   }else{
-    document.getElementById("userAvatar").src = `http://localhost:5050/Images/user.jpeg`
+    document.getElementById("userAvatar").src = `https://chat-app-backend-vf79.onrender.com/Images/user.jpeg`
   }
 }
 
@@ -49,7 +49,7 @@ document.getElementById('profileUpdateForm').addEventListener('submit', async (e
       const formData = new FormData();
       formData.append('image', imageFile);
 
-      const imgRes = await fetch('http://localhost:5050/api/user/upload-profile-image', {
+      const imgRes = await fetch('https://chat-app-backend-vf79.onrender.com/api/user/upload-profile-image', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${sessionStorage.getItem('token')}`
@@ -61,7 +61,7 @@ document.getElementById('profileUpdateForm').addEventListener('submit', async (e
       imagePath = imgData.profileImage;
     }
 
-    const profileRes = await fetch('http://localhost:5050/api/profile/update', {
+    const profileRes = await fetch('https://chat-app-backend-vf79.onrender.com/api/profile/update', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

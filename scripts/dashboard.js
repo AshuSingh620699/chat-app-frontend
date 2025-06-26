@@ -1,7 +1,7 @@
 const token = sessionStorage.getItem("token");
 if (!token) {
     alert("You are not logged in!!!");
-    window.location.href = "../Pages/auth.html";
+    window.location.href = "../index.html";
 }
 
 
@@ -63,8 +63,8 @@ const createCard = (user) => {
 
     const profileImg = document.createElement("img");
     profileImg.src = user.profileImage
-        ? `http://localhost:5050${user.profileImage}`
-        : "http://localhost:5050/Images/user.jpeg";
+        ? `https://chat-app-backend-vf79.onrender.com${user.profileImage}`
+        : "https://chat-app-backend-vf79.onrender.com/Images/user.jpeg";
     profileImg.alt = `${user.username}'s profile picture`;
     profileImg.style.width = "40px";
     profileImg.style.height = "40px";
@@ -93,7 +93,7 @@ const createCard = (user) => {
 // ✅ Load Friends
 async function loadFriends() {
     try {
-        const res = await fetch('http://localhost:5050/api/friends/friends', {
+        const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/friends/friends', {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -131,7 +131,7 @@ async function selectFriend(friend) {
 
     chatHeader.innerHTML = `
     <div id="chatHeaderDetails" style="cursor:pointer; display: flex; align-items: center;">
-    <img src="http://localhost:5050${friend.profileImage || '/Images/user.jpeg'}" alt="profile" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+    <img src="https://chat-app-backend-vf79.onrender.com${friend.profileImage || '/Images/user.jpeg'}" alt="profile" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
     <span>${friend.username}</span></div>`
     document.getElementById('chatHeaderDetails').addEventListener('click', () => {
         openModal1(friend)
@@ -154,7 +154,7 @@ async function loadMessages(prepend = false) {
     if (allMessageLoaded || !currentChatUser) return;
 
     try {
-        const res = await fetch(`http://localhost:5050/api/messages/history/${currentChatUser._id}?skip=${skipCount}&limit=${limit}`, {
+        const res = await fetch(`https://chat-app-backend-vf79.onrender.com/api/messages/history/${currentChatUser._id}?skip=${skipCount}&limit=${limit}`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -208,7 +208,7 @@ async function loadMessages(prepend = false) {
     }
 }
 
-const socket = io('http://localhost:5050'); // Make sure port matches backend
+const socket = io('https://chat-app-backend-vf79.onrender.com'); // Make sure port matches backend
 
 socket.on('connect', () => {
     console.log("Connected to socket server");
@@ -328,7 +328,7 @@ document.getElementById('sendBtn').onclick = async () => {
     if (!content || !currentChatUser) return;
 
     try {
-        const res = await fetch('http://localhost:5050/api/chat/send', {
+        const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/chat/send', {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -368,7 +368,7 @@ document.getElementById('sendBtn').onclick = async () => {
 // ✅ Load Friend Requests
 async function loadFriendRequests() {
     try {
-        const res = await fetch('http://localhost:5050/api/friends/requests', {
+        const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/friends/requests', {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -396,7 +396,7 @@ async function loadFriendRequests() {
 // ✅ Accept Request
 async function acceptRequest(id) {
     try {
-        await fetch(`http://localhost:5050/api/friends/accept/${id}`, {
+        await fetch(`https://chat-app-backend-vf79.onrender.com/api/friends/accept/${id}`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${token}`
@@ -429,7 +429,7 @@ window.onload = () => {
 // ✅ Logout
 function logout() {
     sessionStorage.removeItem("token");
-    window.location.href = "../Pages/auth.html";
+    window.location.href = "../index.html";
 }
 
 function openModal1(friend) {
@@ -444,7 +444,7 @@ function openModal1(friend) {
     // Render HTML with an ID for the button so we can bind event later
     document.getElementById('overview').innerHTML = `
         <div style="display: flex; align-items: center; gap: 15px;">
-            <img src="http://localhost:5050${friend.profileImage || '/Images/user.jpeg'}"
+            <img src="https://chat-app-backend-vf79.onrender.com${friend.profileImage || '/Images/user.jpeg'}"
                  style="width: 60px; height: 60px; border-radius: 50%;">
             <div>
                 <h2 style="margin: 0;">${friend.username}</h2>
@@ -489,7 +489,7 @@ function showNotification(messageContent, senderId) {
         return;
     }
     // 🔄 Get user data
-    fetch(`http://localhost:5050/api/user/${senderId}`, {
+    fetch(`https://chat-app-backend-vf79.onrender.com/api/user/${senderId}`, {
         headers: { Authorization: `Bearer ${token}` }
     }).then(res => {
         console.log(res.status)
@@ -529,7 +529,7 @@ function showNotificationCard(user, content) {
     card.innerHTML = `
         <div class="popup-close" onclick="this.parentElement.remove()">×</div>
         <div class="popup-header">
-            <img src="http://localhost:5050${user.profileImage || '/Images/user.jpeg'}" />
+            <img src="https://chat-app-backend-vf79.onrender.com${user.profileImage || '/Images/user.jpeg'}" />
             <div class="user-info">
                 <h4>${user.username}</h4>
                 <p>${content}</p>
@@ -611,7 +611,7 @@ async function sendReply(receiverId, inputId) {
     if (!reply || !receiverId) return;
 
     try {
-        const res = await fetch(`http://localhost:5050/api/chat/send`, {
+        const res = await fetch(`https://chat-app-backend-vf79.onrender.com/api/chat/send`, {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",

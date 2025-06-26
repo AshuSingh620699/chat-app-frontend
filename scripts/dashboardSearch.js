@@ -9,9 +9,9 @@ const createUserCard = (user) => {
 
     const profileImg = document.createElement("img");
     if (user.profileImage) {
-        profileImg.src = `http://localhost:5050${user.profileImage}`
+        profileImg.src = `https://chat-app-backend-vf79.onrender.com${user.profileImage}`
     } else {
-        profileImg.src = "http://localhost:5050/Images/user.jpeg"; // fallback
+        profileImg.src = "https://chat-app-backend-vf79.onrender.com/Images/user.jpeg"; // fallback
     }
     profileImg.alt = `${user.username}'s profile picture`;
     profileImg.style.width = "40px";
@@ -38,7 +38,7 @@ searchInput.addEventListener('input', async () => {
     }
 
     try {
-        const res = await fetch(`http://localhost:5050/api/search/search?username=${query}`, {
+        const res = await fetch(`https://chat-app-backend-vf79.onrender.com/api/search/search?username=${query}`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -69,14 +69,14 @@ async function showUserProfile(user) {
     profileCard.classList.remove('hidden')
 
     // check if already friend
-    const res = await fetch('http://localhost:5050/api/friends/friends', {
+    const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/friends/friends', {
         headers: { Authorization: `Bearer ${token}` }
     });
 
     const friends = await res.json()
     const isFriend = friends.some(friend => friend._id === user._id)
     profileCard.innerHTML = `
-        <img src="http://localhost:5050${user.profileImage || "/Images/user.jpeg"}" alt="not found" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+        <img src="https://chat-app-backend-vf79.onrender.com${user.profileImage || "/Images/user.jpeg"}" alt="not found" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
         <h4>${user.username}</h4>
         <p>${user.email}</p>
         <button onclick="${isFriend ? `startChat('${user._id}', '${user.username}')` : `sendRequest('${user._id}')`}">
@@ -86,7 +86,7 @@ async function showUserProfile(user) {
 }
 
 function sendRequest(id) {
-    fetch(`http://localhost:5050/api/friends/request/${id}`, {
+    fetch(`https://chat-app-backend-vf79.onrender.com/api/friends/request/${id}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
     })

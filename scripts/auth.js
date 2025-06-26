@@ -29,7 +29,7 @@ document.getElementById('signinForm').addEventListener("submit", async (e) => {
 
 		// saving the token and redirecting..
 		sessionStorage.setItem('token', data.token)
-		window.location.href = '../Pages/dashboard.html'
+		window.location.href = './Pages/dashboard.html'
 	} catch (err) {
 		alertBox.className = 'alert alert-danger'
 		alertBox.textContent = err
@@ -69,7 +69,7 @@ document.getElementById('signupForm').addEventListener("submit", async (e) => {
 			alertBox.classList.remove("d-none")
 
 			setTimeout(() => {
-				window.location.href = "auth.html"
+				window.location.href = "index.html"
 			}, 2000)
 		} else {
 			alertBox.classname = "alert alert-danger"
