@@ -104,3 +104,24 @@ signUpButton.addEventListener('click', () => {
 signInButton.addEventListener('click', () => {
 	container.classList.remove("right-panel-active");
 });
+
+const mainContainer = document.getElementById("container");
+
+document.querySelectorAll(".switch-to-signup").forEach(btn => {
+  btn.addEventListener("click", () => {
+    mainContainer.classList.remove("mobile-signin");
+    mainContainer.classList.add("mobile-signup");
+  });
+});
+
+document.querySelectorAll(".switch-to-signin").forEach(btn => {
+  btn.addEventListener("click", () => {
+    mainContainer.classList.remove("mobile-signup");
+    mainContainer.classList.add("mobile-signin");
+  });
+});
+
+// Show SignIn by default on mobile
+if (window.innerWidth < 768) {
+  mainContainer.classList.add("mobile-signin");
+}

@@ -22,12 +22,13 @@ async function fetchUserProfile() {
 }
 
 function populateOwnProfile(user) {
-  document.getElementById("userName").textContent = user.username || "Your Name";
-  document.getElementById("userBio").textContent = user.bio || "No bio set.";
-
   // Use Cloudinary image if available, else fallback to default Cloudinary URL
-  const defaultImage = "https://res.cloudinary.com/dgrbsskc5/image/upload/v1698851234/chatapp/https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740";
+  const defaultImage = "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg";
+  
   document.getElementById("userAvatar").src = user.profileImage || defaultImage;
+  document.getElementById("profilePreview").src = user.profileImage || defaultImage;
+  document.getElementById("updateUsername").textContent = user.username || "No username set";
+  document.getElementById("updateBio").textContent = user.bio || "No bio available";  
 }
 
 function openModal() {
@@ -87,5 +88,18 @@ document.getElementById('profileUpdateForm').addEventListener('submit', async (e
     alert('Error updating profile');
   }
 });
-document.getElementById('updateProfileBtn').addEventListener('click', openModal);
-document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+
+function openImageOptions() {
+  document.getElementById('updateImage').click();
+}
+
+document.getElementById('updateImage').addEventListener('change', function(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('profilePreview').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});

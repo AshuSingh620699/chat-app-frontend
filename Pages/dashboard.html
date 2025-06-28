@@ -7,25 +7,27 @@
   <title>ChatApp Dashboard</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" />
   <link rel="stylesheet" href="../styles/dashboard.css" />
+  <link rel="stylesheet" href="../styles/Ndashboard.css" />
   <link href='https://cdn.boxicons.com/fonts/basic/boxicons.min.css' rel='stylesheet'>
 </head>
 
 <body>
   <audio id="notifysound" src="../public/sounds/standard-whatsapp.mp3" preload="auto"></audio>
   <div class="dashboard-container">
-    <div class="sidebar">
-      <h2 class="logo">ChatApp</h2>
-      <div class="sidebar-user-profile">
-        <img id="userAvatar" src="" alt="Your Profile Image" />
-        <div>
-          <h3 id="userName">Username</h3>
-          <p id="userBio">Bio goes here...</p>
-        </div>
-      </div>
+    <!-- Slim Sidebar -->
+    <div class="slim-sidebar">
+      <img id="userAvatar" src="" alt="Your Profile Image" />
+      <i class="bx bx-user" id="showFriends"></i>
+      <i class="bx bx-group" id="showRequests"></i>
+      <i class="bx bx-edit" onclick="openModal()"></i>
+      <i class="bx bx-cog"></i>
+    </div>
 
-
+    <!-- Main Sidebar -->
+    <div class="main-sidebar">
       <div class="search-section">
-        <input type="text" id="searchInput" placeholder="Search users by username or email...">
+        <input type="text" id="searchInput" placeholder="Search users by username or email..." />
+        <div id="searchLoader" class="hidden"></div>
         <div id="searchResults" class="search-results"></div>
         <div id="profileCard" class="profile-card hidden"></div>
       </div>
@@ -34,15 +36,13 @@
         <!-- Friends will be listed here -->
       </div>
 
-      <div class="friend-requests" id="friendRequests">
+      <div class="friend-requests hidden" id="friendRequests">
         <h4>Friend Requests</h4>
         <!-- Requests will be listed here -->
       </div>
-      <button onclick="openModal()" class="logout">Edit Profile</button>
-      <button onclick="logout()" class="logout">Logout</button>
     </div>
-
-    <div class="chat-area">
+    <div class="no-chat hidden"></div>
+    <div class="chat-area hidden">
       <div class="chat-header" id="chatHeader">
 
       </div>
@@ -51,23 +51,29 @@
       </div>
       <div class="chat-input">
         <input type="text" id="messageInput" placeholder="Type your message..." />
-        <button id="sendBtn">Send</button>
+        <button id="sendBtn"><i class='bx  bx-send' ></i></button>
       </div>
     </div>
   </div>
 
   <div id="profileModal" class="modal hidden">
     <div class="modal-content">
-      <h2>Update Profile</h2>
       <form id="profileUpdateForm">
+        <div class="profile-picture-section">
+          <div class="profile-picture-wrapper">
+            <img id="profilePreview" src="default-avatar.jpg" alt="Profile" />
+            <div class="edit-icon" onclick="openImageOptions()">
+              <i class="bx bx-pencil"></i>
+            </div>
+          </div>
+          <input type="file" id="updateImage" accept="image/*" hidden />
+        </div>
+
         <label>Username</label>
         <input type="text" id="updateUsername" name="username">
-
+        
         <label>Bio</label>
         <textarea id="updateBio" name="bio" rows="3"></textarea>
-
-        <label>Profile Image</label>
-        <input type="file" id="updateImage" name="image" accept="image/*">
 
         <div class="modal-buttons">
           <button type="submit">Save</button>

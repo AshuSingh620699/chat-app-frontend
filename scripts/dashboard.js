@@ -4,7 +4,13 @@ if (!token) {
     window.location.href = "../index.html";
 }
 
+// Storing set of online users
+const onlineUsers = new Set();
 
+// Queuing message..
+const messageQueue = []
+
+const defaultImage = "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg";
 // Extract user ID from JWT
 const userId = () => JSON.parse(atob(token.split('.')[1])).id;
 const loggedInUser = userId()
@@ -53,44 +59,63 @@ function updateMessageStatus(messageId, newStatus) {
 const unreadMap = new Map() // key : userId, value: count
 
 function highlightUnreadInFriendList() {
-    loadFriends(); // This re-creates cards with latest unreadMap info
+    document.querySelectorAll('.friend-item').forEach(card => {
+        const userId = card.dataset.userId;
+        const unread = unreadMap.get(userId);
+        let badge = card.querySelector('.unread-badge');
+
+        if (unread) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'unread-badge';
+                card.appendChild(badge);
+            }
+            badge.textContent = unread > 99 ? "99+" : unread;
+        } else {
+            if (badge) badge.remove();
+        }
+    });
 }
 
+// ✅ Load Friends
 const createCard = (user) => {
-    const card = document.createElement('div')
-    card.classList.add('friend-item')
-    card.dataset.userId = user._id
+    const card = document.createElement('div');
+    card.classList.add('friend-item');
+    card.dataset.userId = user._id;
+
+    // Profile image container with status dot
+    const profileWrapper = document.createElement("div");
+    profileWrapper.classList.add('profile-wrapper');
 
     const profileImg = document.createElement("img");
-    profileImg.src = user.profileImage
-        ? `https://chat-app-backend-vf79.onrender.com${user.profileImage}`
-        : "https://chat-app-backend-vf79.onrender.com/Images/user.jpeg";
+    profileImg.src = user.profileImage || defaultImage;
     profileImg.alt = `${user.username}'s profile picture`;
-    profileImg.style.width = "40px";
-    profileImg.style.height = "40px";
-    profileImg.style.borderRadius = "50%";
-    profileImg.style.marginRight = "10px";
+    profileImg.className = "profile-image";
+
+    const statusDot = document.createElement("span");
+    statusDot.className = "status-dot offline"; // default offline
+
+    profileWrapper.appendChild(profileImg);
+    profileWrapper.appendChild(statusDot);
 
     const nameSpan = document.createElement("span");
     nameSpan.textContent = user.username;
 
-    card.appendChild(profileImg);
+    card.appendChild(profileWrapper);
     card.appendChild(nameSpan);
 
     const unreadCount = unreadMap.get(user._id);
     if (unreadCount) {
         const badge = document.createElement("span");
         badge.textContent = unreadCount;
-        badge.className = "unread-badge"; // You’ll style this below
+        badge.className = "unread-badge";
         card.appendChild(badge);
     }
 
     return card;
+};
 
-}
 
-
-// ✅ Load Friends
 async function loadFriends() {
     try {
         const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/friends/friends', {
@@ -106,48 +131,16 @@ async function loadFriends() {
             const div = createCard(friend)
             div.onclick = () => selectFriend(friend);
             friendList.appendChild(div);
+
+            // 👇 After DOM element created, apply online status
+            if (onlineUsers.has(friend._id)) {
+                updateFriendStatus(friend._id, true);
+            }
         });
 
     } catch (err) {
         console.error('Failed to load friends', err);
     }
-}
-
-// ✅ Select Friend to Chat
-async function selectFriend(friend) {
-    currentChatUser = friend;
-    // Reset counters for infinite scroll
-    skipCount = 0;
-    allMessageLoaded = false;
-
-    // Reset unread count
-    unreadMap.delete(friend._id)
-    highlightUnreadInFriendList();
-    clearInterval(unreadTitleInterval);
-    unreadTitleInterval = null;
-    document.title = originalTitle;
-
-
-
-    chatHeader.innerHTML = `
-    <div id="chatHeaderDetails" style="cursor:pointer; display: flex; align-items: center;">
-    <img src="https://chat-app-backend-vf79.onrender.com${friend.profileImage || '/Images/user.jpeg'}" alt="profile" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
-    <span>${friend.username}</span></div>`
-    document.getElementById('chatHeaderDetails').addEventListener('click', () => {
-        openModal1(friend)
-    })
-
-    // setting user-data 
-    const chatBox = document.getElementById('chatMessages')
-    chatBox.setAttribute('data-user', friend._id)
-
-    chatBox.innerHTML = ''
-
-    await loadMessages()
-    socket.emit('message-seen', {
-        userId: loggedInUser,
-        fromId: currentChatUser._id
-    })
 }
 
 async function loadMessages(prepend = false) {
@@ -221,9 +214,6 @@ socket.on('connect', () => {
 let unreadTitleInterval = null;
 let originalTitle = document.title;
 
-if (currentChatUser && senderId === currentChatUser._id) {
-
-}
 // ✅ Listen for new messages
 socket.on('receive-message', ({ senderId, content, timestamp, messageId }) => {
     console.log("received", messageId)
@@ -236,13 +226,26 @@ socket.on('receive-message', ({ senderId, content, timestamp, messageId }) => {
         // Current chat is open → show message directly
         const msgDiv = document.createElement('div');
         msgDiv.className = 'message received';
-        msgDiv.textContent = content;
+        msgDiv.innerHTML = `
+      <span class="message-content">${content}</span>
+      <span class="message-meta">
+        <span class="message-time">${formatTime(timestamp)}</span>
+      </span>
+    `;
+        msgDiv.dataset.id = messageId;
         chatMessages.appendChild(msgDiv);
+        typinIndi()
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        // 👇 Emit seen event right after showing the message
+        socket.emit('message-seen', {
+            userId: loggedInUser,
+            fromId: currentChatUser._id
+        });
     } else {
         // Not current chat → track as unread
         const count = unreadMap.get(senderId) || 0;
-        unreadMap.set(senderId, count + 1);
+        // Increment unread count for that user
+        unreadMap.set(senderId, (unreadMap.get(senderId) || 0) + 1);
 
         // Refresh friend list to show badge
         highlightUnreadInFriendList();
@@ -257,15 +260,15 @@ socket.on('message-delivered', (messageId) => {
     updateMessageStatus(messageId, 'delivered');
 });
 
-// Listen for typing...
-socket.on('typing-notification', ({ from }) => {
-    console.log("Received typing notification from:", from)
+function typinIndi(from){
     const chatBox = document.querySelector(`#chatMessages`);
     const user = chatBox.getAttribute("data-user")
 
     if (from !== user) return;
 
     let typingEl = chatBox.querySelector('.typing-indicator');
+    
+    // Create new typing indicator
     if (!typingEl) {
         typingEl = document.createElement('div');
         typingEl.classList.add('typing-indicator');
@@ -277,8 +280,15 @@ socket.on('typing-notification', ({ from }) => {
     clearTimeout(typingEl.typingTimeout);
     typingEl.typingTimeout = setTimeout(() => {
         typingEl.remove();
-    }, 2000);
+    }, 1000);
+}
+
+// Listen for typing...
+socket.on('typing-notification', ({ from }) => {
+    console.log("Received typing notification from:", from)
+    typinIndi(from);
 })
+
 
 // Handling 'message-seen' in frontend
 socket.on("messages-seen", ({ by, ids }) => {
@@ -288,6 +298,44 @@ socket.on("messages-seen", ({ by, ids }) => {
     });
 });
 
+socket.on('user-online', (userId) => {
+    console.log(`User ${userId} is now online`);
+    onlineUsers.add(userId);
+    // Optionally show green dot on friend's avatar
+    updateFriendStatus(userId, true);
+});
+
+socket.on('increment-unread', ({ from }) => {
+    const count = unreadMap.get(from) || 0;
+    unreadMap.set(from, count + 1);
+    highlightUnreadInFriendList();
+});
+
+socket.on('user-offline', (userId) => {
+    console.log(`User ${userId} is now offline`);
+    onlineUsers.delete(userId);
+    updateFriendStatus(userId, false);
+});
+
+socket.on('friends-online', (friendIds) => {
+    console.log("Friends already online:", friendIds);
+    friendIds.forEach(fid => {
+        onlineUsers.add(fid);
+        updateFriendStatus(fid, true);
+    });
+});
+function updateFriendStatus(userId, isOnline) {
+    setTimeout(() => {
+        const card = document.querySelector(`.friend-item[data-user-id="${userId}"]`);
+        if (card) {
+            const dot = card.querySelector('.status-dot');
+            if (dot) {
+                dot.classList.toggle('online', isOnline);
+                dot.classList.toggle('offline', !isOnline);
+            }
+        }
+    }, 3000)
+}
 
 function flashTitle(message) {
 
@@ -318,7 +366,6 @@ if (input) {
     })
     clearTimeout(typingTimeout)
     typingTimeout = setTimeout(() => {
-
     }, 1000)
 }
 
@@ -326,6 +373,35 @@ document.getElementById('sendBtn').onclick = async () => {
     const input = document.getElementById('messageInput');
     const content = input.value.trim();
     if (!content || !currentChatUser) return;
+
+    // Storing locally incase of low internet/no internet
+    const localId = 'local-' + Date.now()
+    const timestamp = new Date().toISOString()
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message sent';
+    msgDiv.innerHTML = `
+    <span class="message-content">${content}</span>
+    <span class="message-meta">
+        <span class="message-time">${formatTime(new Date().toISOString())}</span>
+        <span class="message-status status-sent" data-id="${localId}">⏳</span>
+    </span>
+`;
+    chatMessages.appendChild(msgDiv);
+    typinIndi()
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    input.value = '';
+
+    // Queue if online
+    if (!navigator.onLine) {
+        console.warn("Offline, queuing message");
+        messageQueue.push({
+            content,
+            receiverId: currentChatUser._id,
+            localId,
+            timestamp
+        });
+    }
 
     try {
         const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/chat/send', {
@@ -342,27 +418,57 @@ document.getElementById('sendBtn').onclick = async () => {
 
         const data = await res.json(); // <- must return message _id
         const messageId = data._id;
-        console.log(messageId)
-
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message sent';
-        msgDiv.innerHTML = `
-    <span class="message-content">${content}</span>
-    <span class="message-meta">
-        <span class="message-time">${formatTime(new Date().toISOString())}</span>
-        <span class="message-status status-sent" data-id="${messageId}">✅</span>
-    </span>
-`;
-        chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-
+        const statusEl = document.querySelector(`.message-status[data-id="${localId}"]`);
+        if (statusEl) {
+            statusEl.dataset.id = messageId
+            statusEl.className = "message-status status-sent"
+            statusEl.textContent = '✅';
+        }
         input.value = '';
 
     } catch (err) {
         console.error('Failed to send message:', err);
     }
 };
+
+window.addEventListener('online', async () => {
+    if (pendingQueue.length > 0) {
+        console.log("Retrying pending messages...");
+
+        const queueCopy = [...pendingQueue];
+        pendingQueue.length = 0;
+
+        for (const msg of queueCopy) {
+            try {
+                const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/chat/send', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        receiverId: msg.receiverId,
+                        content: msg.content
+                    })
+                });
+
+                const data = await res.json();
+                const realId = data._id;
+
+                const statusEl = document.querySelector(`.message-status[data-id="${msg.tempId}"]`);
+                if (statusEl) {
+                    statusEl.dataset.id = realId;
+                    statusEl.className = 'message-status status-sent';
+                    statusEl.textContent = '✅';
+                }
+
+            } catch (err) {
+                console.error('Retry failed, re-queuing...', err);
+                pendingQueue.push(msg);
+            }
+        }
+    }
+});
 
 
 // ✅ Load Friend Requests
@@ -424,6 +530,21 @@ window.onload = () => {
             loadMessages(true); // Load older messages
         }
     });
+    const chatarea = document.querySelector('.chat-area');
+    const nochat = document.querySelector('.no-chat');
+
+    if (!currentChatUser) {
+        nochat.classList.remove('hidden');
+        chatarea.classList.add('hidden');
+        nochat.innerHTML = `
+      <div class="no-chat-selected">
+        <i class='bx bx-message-bubble-plus'></i>
+        <p>Select a friend to start chatting!</p>
+      </div>`;
+    } else {
+        nochat.classList.add('hidden');
+        chatarea.classList.remove('hidden');
+    }
 };
 
 // ✅ Logout
@@ -444,7 +565,7 @@ function openModal1(friend) {
     // Render HTML with an ID for the button so we can bind event later
     document.getElementById('overview').innerHTML = `
         <div style="display: flex; align-items: center; gap: 15px;">
-            <img src="https://chat-app-backend-vf79.onrender.com${friend.profileImage || '/Images/user.jpeg'}"
+            <img src="${friend.profileImage || defaultImage}"
                  style="width: 60px; height: 60px; border-radius: 50%;">
             <div>
                 <h2 style="margin: 0;">${friend.username}</h2>
@@ -529,7 +650,7 @@ function showNotificationCard(user, content) {
     card.innerHTML = `
         <div class="popup-close" onclick="this.parentElement.remove()">×</div>
         <div class="popup-header">
-            <img src="https://chat-app-backend-vf79.onrender.com${user.profileImage || '/Images/user.jpeg'}" />
+            <img src="${user.profileImage || defaultImage}" />
             <div class="user-info">
                 <h4>${user.username}</h4>
                 <p>${content}</p>
@@ -537,7 +658,7 @@ function showNotificationCard(user, content) {
         </div>
         <div class="popup-footer">
             <input type="text" id="${uniqueInputId}" placeholder="Reply...">
-            <button onclick="sendReply('${user._id}', '${uniqueInputId}')">Send</button>
+            <button onclick="sendReply('${user._id}', '${uniqueInputId}')"><i class='bx  bx-send' ></i></button>
         </div>
         <div class="popup-preview" style="margin-top: 8px; font-size: 0.85rem; color: #444;"></div>
     `;
@@ -644,7 +765,7 @@ async function sendReply(receiverId, inputId) {
         button.disabled = true;
 
         setTimeout(() => {
-            button.textContent = "Send";
+            button.textContent = `<i class='bx  bx-send' ></i>`;
             button.disabled = false;
         }, 1500);
 
@@ -667,3 +788,107 @@ function showTab(tabId) {
     document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
     document.getElementById(tabId).classList.remove('hidden');
 }
+// Slim Sidebar Toggle for Friends and Requests
+const showFriendsBtn = document.getElementById('showFriends');
+const showRequestsBtn = document.getElementById('showRequests');
+const friendsList = document.getElementById('friendsList');
+const friendRequests = document.getElementById('friendRequests');
+
+showFriendsBtn.addEventListener('click', () => {
+    // Toggle views
+    friendsList.style.display = 'block';
+    friendRequests.style.display = 'none';
+
+    // Highlight icon
+    showFriendsBtn.classList.add('active-icon');
+    showRequestsBtn.classList.remove('active-icon');
+});
+
+showRequestsBtn.addEventListener('click', () => {
+    // Toggle views
+    friendsList.style.display = 'none';
+    friendRequests.style.display = 'block';
+
+    // Highlight icon
+    showRequestsBtn.classList.add('active-icon');
+    showFriendsBtn.classList.remove('active-icon');
+});
+
+// Optional: default state on load
+window.addEventListener('DOMContentLoaded', () => {
+    showFriendsBtn.click();
+});
+
+async function selectFriend(friend) {
+    currentChatUser = friend;
+
+    // Mobile responsive behavior
+    const chatArea = document.querySelector('.chat-area');
+    const chatInput = document.querySelector('.chat-input');
+    const mainSidebar = document.querySelector('.main-sidebar');
+    const nochat = document.querySelector('.no-chat');
+
+    const backButtonHTML = `
+    <span class="back-button" onclick="goBackToFriends()" style="font-size: 25px; margin-right: 10px; cursor:pointer;"><i class='bx  bx-chevron-left-circle'></i></span>
+  `;
+
+    nochat.classList.add('hidden');
+    chatArea.classList.remove('hidden');
+    if (window.innerWidth <= 768) {
+        chatArea.classList.add('show-on-mobile');
+        chatInput.classList.add('show-on-mobile');
+        mainSidebar.classList.add('hide-on-mobile');
+    }
+
+    // Reset counters for infinite scroll
+    skipCount = 0;
+    allMessageLoaded = false;
+
+    // Reset unread count
+    unreadMap.delete(friend._id);
+    highlightUnreadInFriendList();
+    clearInterval(unreadTitleInterval);
+    unreadTitleInterval = null;
+    document.title = originalTitle;
+
+    // Set chat header
+    chatHeader.innerHTML = `
+    ${window.innerWidth <= 768 ? backButtonHTML : ''}
+    <div id="chatHeaderDetails" style="cursor:pointer; display: inline-flex; align-items: center;">
+      <img src="${friend.profileImage || defaultImage}" alt="profile" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+      <span>${friend.username}</span>
+    </div>
+  `;
+
+    // Click to open user info modal
+    document.getElementById('chatHeaderDetails').addEventListener('click', () => {
+        openModal1(friend);
+    });
+
+    // Set user data and load messages
+    const chatBox = document.getElementById('chatMessages');
+    chatBox.setAttribute('data-user', friend._id);
+    chatBox.innerHTML = '';
+
+    await loadMessages();
+
+    socket.emit('message-seen', {
+        userId: loggedInUser,
+        fromId: currentChatUser._id
+    });
+}
+
+function goBackToFriends() {
+    document.querySelector('.chat-area').classList.remove('show-on-mobile');
+    document.querySelector('.chat-input').classList.remove('show-on-mobile');
+    document.querySelector('.main-sidebar').classList.remove('hide-on-mobile');
+}
+
+window.addEventListener('focus', () => {
+    if (currentChatUser) {
+        socket.emit('message-seen', {
+            userId: loggedInUser,
+            fromId: currentChatUser._id
+        });
+    }
+});
