@@ -22,11 +22,9 @@ async function fetchUserProfile() {
 }
 
 function populateOwnProfile(user) {
-  document.getElementById("userName").textContent = user.username || "Your Name";
-  document.getElementById("userBio").textContent = user.bio || "No bio set.";
-
   // Use Cloudinary image if available, else fallback to default Cloudinary URL
-  const defaultImage = "https://res.cloudinary.com/dgrbsskc5/image/upload/v1698851234/chatapp/https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740";
+  const defaultImage = "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg";
+  
   document.getElementById("userAvatar").src = user.profileImage || defaultImage;
 }
 
@@ -87,5 +85,3 @@ document.getElementById('profileUpdateForm').addEventListener('submit', async (e
     alert('Error updating profile');
   }
 });
-document.getElementById('updateProfileBtn').addEventListener('click', openModal);
-document.getElementById('closeModalBtn').addEventListener('click', closeModal);

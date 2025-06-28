@@ -7,13 +7,14 @@
   <title>ChatApp Dashboard</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" />
   <link rel="stylesheet" href="../styles/dashboard.css" />
+   <link rel="stylesheet" href="../styles/Ndashboard.css" />
   <link href='https://cdn.boxicons.com/fonts/basic/boxicons.min.css' rel='stylesheet'>
 </head>
 
 <body>
   <audio id="notifysound" src="../public/sounds/standard-whatsapp.mp3" preload="auto"></audio>
   <div class="dashboard-container">
-    <div class="sidebar">
+    <!-- <div class="sidebar">
       <h2 class="logo">ChatApp</h2>
       <div class="sidebar-user-profile">
         <img id="userAvatar" src="" alt="Your Profile Image" />
@@ -31,15 +32,40 @@
       </div>
 
       <div class="friends-list" id="friendsList">
-        <!-- Friends will be listed here -->
       </div>
 
       <div class="friend-requests" id="friendRequests">
         <h4>Friend Requests</h4>
         <!-- Requests will be listed here -->
-      </div>
+    <!-- </div>
       <button onclick="openModal()" class="logout">Edit Profile</button>
       <button onclick="logout()" class="logout">Logout</button>
+    </div> -->
+    <!-- Slim Sidebar -->
+    <div class="slim-sidebar">
+      <img id="userAvatar" src="" alt="Your Profile Image" />
+      <i class="bx bx-user" id="showFriends"></i>
+      <i class="bx bx-group" id="showRequests"></i>
+      <i class="bx bx-edit" onclick="openModal()"></i>
+      <i class="bx bx-cog"></i>
+    </div>
+
+    <!-- Main Sidebar -->
+    <div class="main-sidebar">
+      <div class="search-section">
+        <input type="text" id="searchInput" placeholder="Search users by username or email..." />
+        <div id="searchResults" class="search-results"></div>
+        <div id="profileCard" class="profile-card hidden"></div>
+      </div>
+
+      <div class="friends-list" id="friendsList">
+        <!-- Friends will be listed here -->
+      </div>
+
+      <div class="friend-requests hidden" id="friendRequests">
+        <h4>Friend Requests</h4>
+        <!-- Requests will be listed here -->
+      </div>
     </div>
 
     <div class="chat-area">

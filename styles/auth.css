@@ -249,3 +249,74 @@ footer a {
     color: #3c97bf;
     text-decoration: none;
 }
+
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+    box-shadow: none;
+    display: block;
+  }
+
+  .form-container {
+    position: relative;
+    width: 100%;
+    height: auto;
+    opacity: 1;
+    transition: all 0.4s ease-in-out;
+  }
+
+  .sign-in-container,
+  .sign-up-container {
+    display: none;
+  }
+
+  .container.mobile-signin .sign-in-container {
+    display: flex;
+    flex-direction: column;
+    animation: slideDown 0.4s ease-in-out;
+  }
+
+  .container.mobile-signup .sign-up-container {
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.4s ease-in-out;
+  }
+
+  .overlay-container,
+  .overlay {
+    display: none;
+  }
+
+  .switch-link {
+    display: block;
+    font-size: 14px;
+    color: #555;
+    text-decoration: underline;
+    margin-top: 10px;
+    cursor: pointer;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0%);
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0%);
+    }
+  }
+}

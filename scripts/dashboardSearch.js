@@ -1,7 +1,32 @@
-const searchInput = document.getElementById("searchInput")
-const searchResults = document.getElementById('searchResults')
-const profileCard = document.getElementById('profileCard')
+const searchInp = document.getElementById("searchInput");
+const searchResults = document.getElementById('searchResults');
+const profileCard = document.getElementById('profileCard');
+const friendslist = document.getElementById('friendsList');
+const friendReq = document.getElementById('friendRequests');
 
+let currentSidebarView = 'friends'; // default view
+
+// Button toggles
+document.getElementById('showFriends').addEventListener('click', () => {
+    currentSidebarView = 'friends';
+    if (!searchInp.value.trim()) {
+        searchResults.innerHTML = '';
+        friendslist.style.display = 'block';
+        friendReq.style.display = 'none';
+    }
+});
+
+document.getElementById('showRequests').addEventListener('click', () => {
+    currentSidebarView = 'requests';
+    if (!searchInp.value.trim()) {
+        searchResults.innerHTML = '';
+        friendReq.style.display = 'block';
+        friendslist.style.display = 'none';
+    }
+});
+
+
+const defImg = "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg";
 
 const createUserCard = (user) => {
     const card = document.createElement("div");
@@ -9,9 +34,9 @@ const createUserCard = (user) => {
 
     const profileImg = document.createElement("img");
     if (user.profileImage) {
-        profileImg.src = `https://chat-app-backend-vf79.onrender.com${user.profileImage}`
+        profileImg.src = `${user.profileImage}`
     } else {
-        profileImg.src = "https://chat-app-backend-vf79.onrender.com/Images/user.jpeg"; // fallback
+        profileImg.src = `${defImg}`; // fallback
     }
     profileImg.alt = `${user.username}'s profile picture`;
     profileImg.style.width = "40px";
@@ -25,16 +50,32 @@ const createUserCard = (user) => {
     card.appendChild(profileImg);
     card.appendChild(nameSpan);
 
-    // add event listener to open profile or chat
-    // card.addEventListener("click", () => openChat(user));
-
     return card;
 };
-searchInput.addEventListener('input', async () => {
-    const query = searchInput.value.trim();
-    if (query.length < 2) {
-        searchResults.innerHTML = ''
-        return
+searchInp.addEventListener('input', async () => {
+    const query = searchInp.value.trim();
+
+    // Show search results only if at least 2 characters typed
+    if (query.length >= 2) {
+        searchResults.style.display = 'block';
+        friendslist.style.display = 'none';
+        friendReq.style.display = 'none';
+        profileCard.classList.add('hidden');
+    } else {
+        // Hide searchResults and restore previously selected view
+        searchResults.innerHTML = '';
+        searchResults.style.display = 'none';
+        profileCard.classList.add('hidden');
+
+        if (currentSidebarView === 'friends') {
+            friendslist.style.display = 'block';
+            friendReq.style.display = 'none';
+        } else {
+            friendReq.style.display = 'block';
+            friendslist.style.display = 'none';
+        }
+
+        return;
     }
 
     try {
@@ -76,13 +117,23 @@ async function showUserProfile(user) {
     const friends = await res.json()
     const isFriend = friends.some(friend => friend._id === user._id)
     profileCard.innerHTML = `
-        <img src="https://chat-app-backend-vf79.onrender.com${user.profileImage || "/Images/user.jpeg"}" alt="not found" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
-        <h4>${user.username}</h4>
-        <p>${user.email}</p>
-        <button onclick="${isFriend ? `startChat('${user._id}', '${user.username}')` : `sendRequest('${user._id}')`}">
-            ${isFriend ? 'Chat Now' : 'Send Friend Request'}
-        </button>
-    `;
+    <img src="${user.profileImage || defImg}" alt="not found" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+    <h4>${user.username}</h4>
+    <p>${user.email}</p>
+`;
+
+    const actionBtn = document.createElement('button');
+    actionBtn.textContent = isFriend ? 'Chat Now' : 'Send Friend Request';
+    actionBtn.addEventListener('click', () => {
+        if (isFriend) {
+            startChat(user._id, user.username, user.profileImage);
+        } else {
+            sendRequest(user._id);
+        }
+    });
+
+    profileCard.appendChild(actionBtn);
+
 }
 
 function sendRequest(id) {
@@ -95,7 +146,7 @@ function sendRequest(id) {
         .catch(err => console.error('Request error:', err));
 }
 
-function startChat(id, username) {
-    const dummyFriend = { _id: id, username };
+function startChat(id, username, profileImage) {
+    const dummyFriend = { _id: id, username, profileImage };
     selectFriend(dummyFriend);
 }

@@ -4,7 +4,7 @@ if (!token) {
     window.location.href = "../index.html";
 }
 
-
+const defaultImage = "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg";
 // Extract user ID from JWT
 const userId = () => JSON.parse(atob(token.split('.')[1])).id;
 const loggedInUser = userId()
@@ -63,8 +63,8 @@ const createCard = (user) => {
 
     const profileImg = document.createElement("img");
     profileImg.src = user.profileImage
-        ? `https://chat-app-backend-vf79.onrender.com${user.profileImage}`
-        : "https://chat-app-backend-vf79.onrender.com/Images/user.jpeg";
+        ? `${user.profileImage}`
+        : `${defaultImage}`; // Fallback to default image
     profileImg.alt = `${user.username}'s profile picture`;
     profileImg.style.width = "40px";
     profileImg.style.height = "40px";
@@ -131,7 +131,7 @@ async function selectFriend(friend) {
 
     chatHeader.innerHTML = `
     <div id="chatHeaderDetails" style="cursor:pointer; display: flex; align-items: center;">
-    <img src="https://chat-app-backend-vf79.onrender.com${friend.profileImage || '/Images/user.jpeg'}" alt="profile" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+    <img src="${friend.profileImage || defaultImage}" alt="profile" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
     <span>${friend.username}</span></div>`
     document.getElementById('chatHeaderDetails').addEventListener('click', () => {
         openModal1(friend)
@@ -221,9 +221,6 @@ socket.on('connect', () => {
 let unreadTitleInterval = null;
 let originalTitle = document.title;
 
-if (currentChatUser && senderId === currentChatUser._id) {
-
-}
 // ✅ Listen for new messages
 socket.on('receive-message', ({ senderId, content, timestamp, messageId }) => {
     console.log("received", messageId)
@@ -444,7 +441,7 @@ function openModal1(friend) {
     // Render HTML with an ID for the button so we can bind event later
     document.getElementById('overview').innerHTML = `
         <div style="display: flex; align-items: center; gap: 15px;">
-            <img src="https://chat-app-backend-vf79.onrender.com${friend.profileImage || '/Images/user.jpeg'}"
+            <img src="${friend.profileImage || defaultImage}"
                  style="width: 60px; height: 60px; border-radius: 50%;">
             <div>
                 <h2 style="margin: 0;">${friend.username}</h2>
@@ -529,7 +526,7 @@ function showNotificationCard(user, content) {
     card.innerHTML = `
         <div class="popup-close" onclick="this.parentElement.remove()">×</div>
         <div class="popup-header">
-            <img src="https://chat-app-backend-vf79.onrender.com${user.profileImage || '/Images/user.jpeg'}" />
+            <img src="${user.profileImage || defaultImage}" />
             <div class="user-info">
                 <h4>${user.username}</h4>
                 <p>${content}</p>
@@ -667,3 +664,33 @@ function showTab(tabId) {
     document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
     document.getElementById(tabId).classList.remove('hidden');
 }
+// Slim Sidebar Toggle for Friends and Requests
+const showFriendsBtn = document.getElementById('showFriends');
+const showRequestsBtn = document.getElementById('showRequests');
+const friendsList = document.getElementById('friendsList');
+const friendRequests = document.getElementById('friendRequests');
+
+showFriendsBtn.addEventListener('click', () => {
+  // Toggle views
+  friendsList.style.display = 'block';
+  friendRequests.style.display = 'none';
+
+  // Highlight icon
+  showFriendsBtn.classList.add('active-icon');
+  showRequestsBtn.classList.remove('active-icon');
+});
+
+showRequestsBtn.addEventListener('click', () => {
+  // Toggle views
+  friendsList.style.display = 'none';
+  friendRequests.style.display = 'block';
+
+  // Highlight icon
+  showRequestsBtn.classList.add('active-icon');
+  showFriendsBtn.classList.remove('active-icon');
+});
+
+// Optional: default state on load
+window.addEventListener('DOMContentLoaded', () => {
+  showFriendsBtn.click();
+});
