@@ -320,3 +320,7 @@ footer a {
     }
   }
 }
+
+.social-container a i {
+	font-size: 22px;
+}

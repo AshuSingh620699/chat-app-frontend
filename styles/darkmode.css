@@ -1,0 +1,134 @@
+/* Base dark theme colors */
+:root {
+  --bg-color: #0e0e10;
+  --card-bg: #1a1a1d;
+  --border-color: #2c2c30;
+  --text-color: #e4e4e7;
+  --text-muted: #a0a0a0;
+  --accent: #3ea6ff;
+  --scroll-thumb: #444;
+}
+
+/* Apply dark mode to the whole app */
+body.dark-mode {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Slim sidebar */
+body.dark-mode .slim-sidebar {
+  background-color: var(--card-bg);
+  border-right: 1px solid var(--border-color);
+  box-shadow: inset 8px 8px 16px var(--text-muted),
+}
+
+body.dark-mode .slim-sidebar i,
+body.dark-mode .slim-sidebar img {
+  color: var(--text-color);
+  filter: brightness(0.9);
+}
+
+/* Main sidebar */
+body.dark-mode .main-sidebar {
+  background-color: rgb(20, 20, 24,1);
+  border-right: 1px solid var(--border-color);
+  box-shadow: inset 8px 8px 16px var(--text-muted),
+}
+
+body.dark-mode .main-sidebar input[type="text"] {
+  background-color: #222;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+body.dark-mode .friend-item,
+body.dark-mode .search-item {
+  background-color: #1f1f23;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: inset 8px 8px 16px var(--text-muted),
+}
+
+body.dark-mode .friend-item:hover {
+  background-color: #2c2c30;
+}
+
+
+
+/* Chat area */
+body.dark-mode .chat-area {
+  background-color: var(--bg-color);
+  border-left: 1px solid var(--border-color);
+}
+
+body.dark-mode .message {
+  color: var(--text-color);
+}
+
+body.dark-mode .message.sent {
+  background-color: #2b2b2f;
+}
+
+body.dark-mode .message.received {
+  background-color: #1a1a1d;
+}
+
+body.dark-mode .chat-input input,
+body.dark-mode .chat-input textarea,
+body.dark-mode .chat-input {
+  background-color: #222;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+/* Search-section */
+body.dark-mode .search-section input{
+    box-shadow: inset 8px 8px 16px var(--text-muted),;
+    border: 1px solid var(--border-color);
+}
+body.dark-mode .search-item:hover{
+    background:  #2c2c30;
+}
+
+/* profile-card */
+body.dark-mode .profile-card {
+  background: #2c2c30;
+  box-shadow: inset 8px 8px 16px var(--text-muted), inset -8px -8px 16px #1a1a1d;
+  border: 1px solid var(--border-color);
+}
+body.dark-mode .profile-card h4,
+body.dark-mode .profile-card p {
+  color: var(--text-color);
+}
+body.dark-mode .profile-card img {
+  filter: brightness(0.8);
+}
+body.dark-mode .profile-card button {
+  background-color: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+body.dark-mode .profile-card button:hover {
+  background-color: #2b8fdc;
+}
+/* Modals, settings, etc. */
+body.dark-mode .modal,
+body.dark-mode .settings-dropdown {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+body.dark-mode .settings-dropdown div:hover {
+  opacity: 0.4;
+  background-color: #c7c7d3;
+  transition: background-color 0.3s ease;
+}
+
+
+
+/* Scrollbar */
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb);
+}
