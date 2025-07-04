@@ -1,8 +1,17 @@
 const token = sessionStorage.getItem("token");
+localStorage.setItem('userId', JSON.parse(atob(token.split('.')[1])).id); // Store userId for dark mode
 if (!token) {
     alert("You are not logged in!!!");
     window.location.href = "../index.html";
 }
+
+// Navigation of file
+let gallery = []
+let currentGalleryIndex = -1;
+
+// Swiping in mobile phones
+let touchStartX = 0;
+let touchEndX = 0;
 
 // Storing set of online users
 const onlineUsers = new Set();
@@ -163,22 +172,73 @@ async function loadMessages(prepend = false) {
         // 👇 Only reverse if we're prepending
         const messagesToRender = prepend ? messages.reverse() : messages;
 
-        // console.log('msg.createdAt:', msg.createdAt);
+        if (!prepend) {
+            gallery = [],
+                currentGalleryIndex = -1
+        }; // reset for new chat
 
         messagesToRender.forEach(msg => {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message';
             msgDiv.classList.add(msg.sender === userId() ? 'sent' : 'received');
+            msgDiv.dataset.id = msg._id;
+
+            const isFile = msg.file && msg.file.url;
+            const isImage = isFile && msg.file.fileType?.startsWith('image/');
+            const isVideo = isFile && msg.file.fileType?.startsWith('video/');
             const statusClass = msg.sender === userId() ? getStatusClass(msg.status) : '';
             const statusSymbol = msg.sender === userId() ? getStatusSymbol(msg.status) : '';
+            if (isFile && (isImage || isVideo)) {
+                gallery.push({
+                    url: msg.file.url,
+                    fileName: msg.file.fileName || 'image.jpg',
+                    fileType: msg.file.fileType,
+                    caption: msg.content || ""
+                });
+            }
 
+            let contentHTML = '';
+
+            if (msg.file && msg.file.url) {
+                const category = getFileTypeCategory(msg.file.fileType);
+                const fileUrl = msg.file.url;
+                const fileName = msg.file.fileName || 'file';
+
+                switch (category) {
+                    case 'image':
+                        contentHTML = `
+                <img src="${fileUrl}" class="file-image" onclick="openImageViewer('${fileUrl}', '${fileName}', 'image/png')">`;
+                        break;
+                    case 'video':
+                        contentHTML = `
+                <video controls class="file-video" onclick="openImageViewer('${fileUrl}', '${fileName}', 'video/mp4')">
+                    <source src="${fileUrl}" type="${msg.file.fileType}">
+                    Your browser does not support the video tag.
+                </video>`;
+                        break;
+                    case 'pdf':
+                    case 'doc':
+                    case 'other':
+                        contentHTML = `
+                <a href="${fileUrl}" target="_blank" download>
+                    📄 ${fileName}
+                </a>`;
+                        break;
+                }
+            }
+
+            const fromattedText = linkify(msg.content || '').replace(/\n/g, '<br>');
             msgDiv.innerHTML = `
-                <span class="message-content">${msg.content}</span>
-                <span class="message-meta">
-                    <span class="message-time">${formatTime(msg.timestamp)}</span>
-                    ${msg.sender === userId() ? `<span class="message-status ${statusClass}" data-id="${msg._id}">${statusSymbol}</span>` : ''}
-                </span>
-                `;
+  
+  ${isFile ? `<div class="file-message">${contentHTML}</div>` : ''}
+  <span class="message-content">${fromattedText}</span>
+  <span class="message-meta">
+    <span class="message-time">${formatTime(msg.timestamp)}</span>
+    ${msg.sender === userId() ? `<span class="message-status ${statusClass}" data-id="${msg._id}">${statusSymbol}</span>` : ''}
+  </span>
+`;
+
+
 
             msgDiv.dataset.id = msg._id;
 
@@ -201,6 +261,26 @@ async function loadMessages(prepend = false) {
     }
 }
 
+
+// Get the type of file we are sharing
+function getFileTypeCategory(fileType) {
+    if (fileType.startsWith('image/')) return 'image';
+    if (fileType.startsWith('video/')) return 'video';
+    if (fileType === 'application/pdf') return 'pdf';
+    if (fileType.includes('msword') || fileType.includes('officedocument')) return 'doc';
+    return 'other';
+}
+
+// Auto detecting links
+function linkify(text) {
+    const urlRegex = /((https?:\/\/|www\.)[^\s]+)/g;
+    return text.replace(urlRegex, url => {
+        const href = url.startsWith('http') ? url : 'https://' + url;
+        return `<a href="${href}" target="_blank" style="color: #007bff;">${url}</a>`;
+    });
+}
+
+
 const socket = io('https://chat-app-backend-vf79.onrender.com'); // Make sure port matches backend
 
 socket.on('connect', () => {
@@ -215,7 +295,7 @@ let unreadTitleInterval = null;
 let originalTitle = document.title;
 
 // ✅ Listen for new messages
-socket.on('receive-message', ({ senderId, content, timestamp, messageId }) => {
+socket.on('receive-message', ({ senderId, content, timestamp, messageId, file }) => {
     console.log("received", messageId)
     if (messageId) {
         socket.emit('message-delivered', messageId); // 👈 Emit delivery event to server
@@ -223,15 +303,48 @@ socket.on('receive-message', ({ senderId, content, timestamp, messageId }) => {
         console.warn("No messageId received:", data);
     }
     if (currentChatUser && senderId === currentChatUser._id) {
+
+        const isFile = file && file.url;
+        const isImage = isFile && file.fileType?.startsWith('image/');
+        const isVideo = isFile && file.fileType?.startsWith('video/');
+        if (isFile && (isImage || isVideo)) {
+            gallery.push({
+                url: file.url,
+                fileName: file.fileName || 'image.jpg',
+                fileType: file.fileType,
+                caption: content || ""
+            });
+        }
         // Current chat is open → show message directly
         const msgDiv = document.createElement('div');
         msgDiv.className = 'message received';
+        let fileHTML = '';
+        if (file && file.url) {
+            const fileType = file.fileType || '';
+            if (fileType.startsWith('image/')) {
+                fileHTML = `<div class="file-message"><img src="${file.url}" class="file-image" onclick="openImageViewer('${file.url}', '${file.fileName}', 'image/')"></div>`;
+            } else if (fileType.startsWith('video/')) {
+                fileHTML = `<div class="file-message">
+            <video controls class="file-video" onclick="openImageViewer('${file.url}', '${file.fileName}', 'video/mp4')">
+                <source src="${file.url}" type="${fileType}">
+                Your browser does not support the video tag.
+            </video>
+        </div>`;
+            } else {
+                fileHTML = `<div class="file-message">
+            <a href="${file.url}" target="_blank" download>📄 ${file.fileName || 'Download File'}</a>
+        </div>`;
+            }
+        }
+
         msgDiv.innerHTML = `
-      <span class="message-content">${content}</span>
-      <span class="message-meta">
+    ${fileHTML}
+    <span class="message-content">${linkify(content || "")}</span>
+    <span class="message-meta">
         <span class="message-time">${formatTime(timestamp)}</span>
-      </span>
-    `;
+    </span>
+`;
+
         msgDiv.dataset.id = messageId;
         chatMessages.appendChild(msgDiv);
         typinIndi()
@@ -260,14 +373,14 @@ socket.on('message-delivered', (messageId) => {
     updateMessageStatus(messageId, 'delivered');
 });
 
-function typinIndi(from){
+function typinIndi(from) {
     const chatBox = document.querySelector(`#chatMessages`);
     const user = chatBox.getAttribute("data-user")
 
     if (from !== user) return;
 
     let typingEl = chatBox.querySelector('.typing-indicator');
-    
+
     // Create new typing indicator
     if (!typingEl) {
         typingEl = document.createElement('div');
@@ -369,74 +482,129 @@ if (input) {
     }, 1000)
 }
 
+
+
 document.getElementById('sendBtn').onclick = async () => {
+    const file = fileInput.files[0];  // optional
     const input = document.getElementById('messageInput');
     const content = input.value.trim();
-    if (!content || !currentChatUser) return;
 
-    // Storing locally incase of low internet/no internet
-    const localId = 'local-' + Date.now()
-    const timestamp = new Date().toISOString()
+    if (!content && !file) return; // prevent sending empty message
+    if (!currentChatUser) return;
 
+    const localId = 'local-' + Date.now();
+    const timestamp = new Date().toISOString();
+
+
+    // Create temporary message in UI
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message sent';
-    msgDiv.innerHTML = `
-    <span class="message-content">${content}</span>
-    <span class="message-meta">
-        <span class="message-time">${formatTime(new Date().toISOString())}</span>
-        <span class="message-status status-sent" data-id="${localId}">⏳</span>
-    </span>
-`;
-    chatMessages.appendChild(msgDiv);
-    typinIndi()
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    input.value = '';
 
-    // Queue if online
+    let filePreview = '';
+    if (file) {
+        const fileUrl = URL.createObjectURL(file);
+        const fileType = file.type || '';
+        const fileName = file.name || 'file';
+
+        if (fileType.startsWith('image/')) {
+            filePreview = `
+                <div class="file-message">
+                    <img src="${fileUrl}" class="file-image" onclick="openImageViewer('${fileUrl}', '${fileName}')">
+                </div>`;
+        } else if (fileType.startsWith('video/')) {
+            filePreview = `
+                <div class="file-message">
+                    <video controls class="file-video">
+                        <source src="${fileUrl}" type="${fileType}">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>`;
+        } else {
+            filePreview = `
+                <div class="file-message">
+                    <a href="${fileUrl}" target="_blank" download>
+                        📄 ${fileName}
+                    </a>
+                </div>`;
+        }
+    }
+
+
+    msgDiv.innerHTML = `
+        <div class="file-message">${filePreview}</div>
+        <div class="message-content">${linkify(content || "")}</div>
+        <span class="message-meta">
+            <span class="message-time">${formatTime(timestamp)}</span>
+            <span class="message-status status-sent" data-id="${localId}">⏳</span>
+        </span>
+    `;
+
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    input.value = '';
+    fileInput.value = '';
+    document.getElementById(previewContainerId)?.remove();
+
+    // Queue if offline
     if (!navigator.onLine) {
-        console.warn("Offline, queuing message");
         messageQueue.push({
+            type: file ? 'file' : 'text',
             content,
             receiverId: currentChatUser._id,
             localId,
-            timestamp
+            timestamp,
+            file // store actual file object in queue (optional, depends on your queue strategy)
         });
+        return;
     }
+
+    // Send via unified /send API
+    const formData = new FormData();
+    if (file) formData.append('file', file);
+    formData.append('receiverId', currentChatUser._id);
+    formData.append('content', content);
 
     try {
         const res = await fetch('https://chat-app-backend-vf79.onrender.com/api/chat/send', {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({
-                receiverId: currentChatUser._id,
-                content
-            })
+            body: formData
         });
 
-        const data = await res.json(); // <- must return message _id
+        const data = await res.json();
         const messageId = data._id;
+
         const statusEl = document.querySelector(`.message-status[data-id="${localId}"]`);
         if (statusEl) {
-            statusEl.dataset.id = messageId
-            statusEl.className = "message-status status-sent"
+            statusEl.dataset.id = messageId;
+            statusEl.className = "message-status status-sent";
             statusEl.textContent = '✅';
         }
-        input.value = '';
-
     } catch (err) {
         console.error('Failed to send message:', err);
     }
+
+    if (file) {
+        gallery.push({
+            url: URL.createObjectURL(file),
+            fileName: file.name || 'file',
+            fileType: file.type || '',
+            caption: content || ""
+        })
+        currentGalleryIndex += currentGalleryIndex
+    }
 };
 
+
 window.addEventListener('online', async () => {
-    if (pendingQueue.length > 0) {
+    if (messageQueue.length > 0) {
         console.log("Retrying pending messages...");
 
-        const queueCopy = [...pendingQueue];
-        pendingQueue.length = 0;
+        const queueCopy = [...messageQueue];
+        messageQueue.length = 0;
 
         for (const msg of queueCopy) {
             try {
@@ -552,6 +720,39 @@ function logout() {
     sessionStorage.removeItem("token");
     window.location.href = "../index.html";
 }
+
+const settingsBtn = document.querySelector('.bx-cog');
+const dropdown = document.getElementById('settingsDropdown');
+
+function openSettings() {
+    dropdown.classList.toggle('hidden');
+}
+
+// Hide dropdown if clicked outside
+document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target) && !settingsBtn.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+function toggleDarkMode() {
+    const userId = localStorage.getItem('userId'); // ✅ Fix here
+    if (!userId) return;
+
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem(`darkMode-${userId}`, isDark); // ✅ Store per user
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    const isDark = localStorage.getItem(`darkMode-${userId}`) === 'true';
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+    }
+
+});
 
 function openModal1(friend) {
     document.getElementById('chatInfoModal').classList.remove('hidden');
@@ -821,6 +1022,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function selectFriend(friend) {
     currentChatUser = friend;
+    currentGalleryIndex = -1; // Reset gallery index when switching friends
+    gallery = []; // Reset gallery for new chat
 
     // Mobile responsive behavior
     const chatArea = document.querySelector('.chat-area');
@@ -879,6 +1082,8 @@ async function selectFriend(friend) {
 }
 
 function goBackToFriends() {
+    const chatMessages = document.querySelector('#chatMessages');
+    chatMessages.dataset = ''
     document.querySelector('.chat-area').classList.remove('show-on-mobile');
     document.querySelector('.chat-input').classList.remove('show-on-mobile');
     document.querySelector('.main-sidebar').classList.remove('hide-on-mobile');
@@ -892,3 +1097,170 @@ window.addEventListener('focus', () => {
         });
     }
 });
+
+
+// Handling File Input
+
+const fileInput = document.getElementById('fileInput');
+const previewContainerId = 'filePreviewPopup';
+
+fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file || !currentChatUser) return;
+
+    showPreviewPopup(file);
+});
+
+function showPreviewPopup(file) {
+    // Remove any existing popup
+    document.getElementById(previewContainerId)?.remove();
+
+    const popup = document.createElement('div');
+    popup.id = previewContainerId;
+    popup.className = 'file-preview-popup';
+
+    const fileURL = URL.createObjectURL(file);
+    const isImage = file.type.startsWith('image/');
+    const filename = file.name;
+
+    popup.innerHTML = `
+        <div class="popup-header">
+            <button class="close-btn" onclick="document.getElementById('${previewContainerId}').remove()">✖</button>
+        </div>
+        <div class="popup-body">
+            ${isImage ? `<img src="${fileURL}" class="popup-image-preview">` :
+            `<div class="file-info"><strong>${filename}</strong><br><small>${file.type}</small></div>`}
+        </div>
+    `;
+
+    document.querySelector('.chat-area').appendChild(popup);
+}
+
+// 
+function openImageViewer(fileUrl, fileName, fileType) {
+    const viewer = document.getElementById('imageViewer');
+    const image = document.getElementById('viewerImage');
+    const video = document.getElementById('viewerVideo');
+    const videoSrc = document.getElementById('viewerVideoSource');
+
+    // Reset
+    image.style.display = 'none';
+    video.style.display = 'none';
+
+    // Find index in gallery
+    const index = gallery.findIndex(g => g.url === fileUrl);
+    if (index !== -1) {
+        currentGalleryIndex = index;
+        const current = gallery[index];
+
+        if (current.fileType.startsWith('video/')) {
+            video.style.display = 'block';
+            videoSrc.src = current.url;
+            videoSrc.type = current.fileType;
+            video.load();
+        } else {
+            image.style.display = 'block';
+            image.src = current.url;
+        }
+
+        document.getElementById('viewerCaption').innerText = current.fileName || '';
+        document.getElementById('downloadBtn').href = current.url;
+        document.getElementById('downloadBtn').download = current.fileName;
+        document.getElementById('imageCounter').textContent = `${index + 1} of ${gallery.length}`;
+        viewer.classList.remove('hidden');
+    } else {
+        console.warn("Media not found in gallery:", fileUrl);
+    }
+}
+
+
+
+function closeImageViewer() {
+    const viewer = document.getElementById('imageViewer');
+    document.getElementById('viewerImage').src = '';
+    document.getElementById('viewerVideoSource').src = '';
+    document.getElementById('viewerVideo').pause();
+    viewer.classList.add('hidden');
+}
+
+
+function navigateGallery(direction) {
+    const newIndex = currentGalleryIndex + direction;
+    if (newIndex >= 0 && newIndex < gallery.length) {
+        currentGalleryIndex = newIndex;
+        showGalleryByIndex(currentGalleryIndex);
+    }
+}
+
+function showGalleryByIndex(index) {
+    if (index < 0 || index >= gallery.length) return;
+
+    const image = document.getElementById('viewerImage');
+    const video = document.getElementById('viewerVideo');
+    const videoSrc = document.getElementById('viewerVideoSource');
+
+    const { url, caption, fileName, fileType } = gallery[index];
+
+    image.style.display = 'none';
+    video.style.display = 'none';
+
+    if (fileType.startsWith('video/')) {
+        video.style.display = 'block';
+        videoSrc.src = url;
+        videoSrc.type = fileType;
+        video.load();
+    } else {
+        image.style.display = 'block';
+        image.src = url;
+    }
+
+    document.getElementById('viewerCaption').textContent = caption || '';
+    const downloadBtn = document.getElementById('downloadBtn');
+    downloadBtn.href = url;
+    downloadBtn.download = fileName || 'media';
+    document.getElementById('imageCounter').textContent = `${index + 1} of ${gallery.length}`;
+}
+
+
+
+// Naviagte using keyboard arrows
+document.addEventListener('keydown', (e) => {
+
+    const viewer = document.getElementById('imageViewer');
+    if (viewer.classList.contains('hidden')) return;
+
+    if (e.key === 'ArrowLeft') {
+        navigateGallery(-1);
+    } else if (e.key === 'ArrowRight') {
+        navigateGallery(1);
+    } else if (e.key === 'Escape') {
+        closeImageViewer();
+    }
+});
+
+// Swiping support
+const viewerImage = document.getElementById('imageViewer');
+
+viewerImage.addEventListener('touchstart', (e) => {
+    if (gallery.length <= 1) return; // No swiping if only one image
+
+    touchStartX = e.touches[0].clientX;
+});
+viewerImage.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) < 30) return; // Ignore tiny swipes
+
+    if (diff > 30) {
+        // Swipe left → next
+        navigateGallery(1);
+    } else if (diff < -30) {
+        // Swipe right → previous
+        navigateGallery(-1);
+    }
+}
+

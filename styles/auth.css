@@ -320,3 +320,8 @@ footer a {
     }
   }
 }
+
+.social-container a i {
+	margin-top: 7px;
+	font-size: 25px;
+}
