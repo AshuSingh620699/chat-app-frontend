@@ -169,16 +169,28 @@ async function loadMessages(prepend = false) {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message';
             msgDiv.classList.add(msg.sender === userId() ? 'sent' : 'received');
+            msgDiv.dataset.id = msg._id;
+
+            const isFile = msg.file && msg.file.url;
             const statusClass = msg.sender === userId() ? getStatusClass(msg.status) : '';
             const statusSymbol = msg.sender === userId() ? getStatusSymbol(msg.status) : '';
 
+
             msgDiv.innerHTML = `
-                <span class="message-content">${msg.content}</span>
-                <span class="message-meta">
-                    <span class="message-time">${formatTime(msg.timestamp)}</span>
-                    ${msg.sender === userId() ? `<span class="message-status ${statusClass}" data-id="${msg._id}">${statusSymbol}</span>` : ''}
-                </span>
-                `;
+  <span class="message-content">
+    ${isFile
+                    ? `<a href="${msg.file.url}" target="_blank" download style="text-decoration: underline; color: #007bff;">
+             ${msg.file.fileName || 'Download File'}
+           </a>`
+                    : msg.content
+                }
+  </span>
+  <span class="message-meta">
+    <span class="message-time">${formatTime(msg.timestamp)}</span>
+    ${msg.sender === userId() ? `<span class="message-status ${statusClass}" data-id="${msg._id}">${statusSymbol}</span>` : ''}
+  </span>
+`;
+
 
             msgDiv.dataset.id = msg._id;
 
@@ -200,6 +212,35 @@ async function loadMessages(prepend = false) {
         console.error('Error loading messages:', err);
     }
 }
+
+function renderFileMessage(message, type) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${type === 'sent' ? 'sent' : (type === 'pending' ? 'sent pending' : 'received')}`;
+
+    let fileHTML = '';
+    if (message.file) {
+        if (message.file.fileType.startsWith('image/')) {
+            fileHTML = `<img src="${message.file.url}" class="chat-file-image" alt="Image" />`;
+        } else {
+            fileHTML = `<a href="${message.file.url}" target="_blank" class="chat-file-link">${message.file.fileName || 'File'}</a>`;
+        }
+    }
+
+    msgDiv.innerHTML = `
+    <span class="message-content">
+      ${fileHTML}
+      ${message.content ? `<p>${message.content}</p>` : ''}
+    </span>
+    <span class="message-meta">
+      <span class="message-time">${formatTime(message.timestamp)}</span>
+      ${type === 'sent' ? `<span class="message-status status-sent" data-id="${message._id}">✅</span>` : ''}
+      ${type === 'pending' ? `<span class="message-status" data-id="${message._id}">⏳</span>` : ''}
+    </span>
+  `;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 
 const socket = io('https://chat-app-backend-vf79.onrender.com'); // Make sure port matches backend
 
@@ -223,6 +264,9 @@ socket.on('receive-message', ({ senderId, content, timestamp, messageId }) => {
         console.warn("No messageId received:", data);
     }
     if (currentChatUser && senderId === currentChatUser._id) {
+
+        renderFileMessage({ content, file, timestamp, _id: messageId }, 'received');
+
         // Current chat is open → show message directly
         const msgDiv = document.createElement('div');
         msgDiv.className = 'message received';
@@ -260,14 +304,14 @@ socket.on('message-delivered', (messageId) => {
     updateMessageStatus(messageId, 'delivered');
 });
 
-function typinIndi(from){
+function typinIndi(from) {
     const chatBox = document.querySelector(`#chatMessages`);
     const user = chatBox.getAttribute("data-user")
 
     if (from !== user) return;
 
     let typingEl = chatBox.querySelector('.typing-indicator');
-    
+
     // Create new typing indicator
     if (!typingEl) {
         typingEl = document.createElement('div');
@@ -396,6 +440,7 @@ document.getElementById('sendBtn').onclick = async () => {
     if (!navigator.onLine) {
         console.warn("Offline, queuing message");
         messageQueue.push({
+            type:'file' || '',
             content,
             receiverId: currentChatUser._id,
             localId,
@@ -435,8 +480,8 @@ window.addEventListener('online', async () => {
     if (pendingQueue.length > 0) {
         console.log("Retrying pending messages...");
 
-        const queueCopy = [...pendingQueue];
-        pendingQueue.length = 0;
+        const queueCopy = [...messageQueue];
+        messageQueue.length = 0;
 
         for (const msg of queueCopy) {
             try {
@@ -879,6 +924,8 @@ async function selectFriend(friend) {
 }
 
 function goBackToFriends() {
+    const chatMessages = document.querySelector('#chatMessages');
+    chatMessages.dataset = ''
     document.querySelector('.chat-area').classList.remove('show-on-mobile');
     document.querySelector('.chat-input').classList.remove('show-on-mobile');
     document.querySelector('.main-sidebar').classList.remove('hide-on-mobile');

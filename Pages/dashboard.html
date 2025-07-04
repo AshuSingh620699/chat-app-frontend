@@ -41,6 +41,15 @@
         <!-- Requests will be listed here -->
       </div>
     </div>
+    <div id="filePreviewModal" class="modalS hidden">
+      <div class="modalS-content">
+        <span class="close" onclick="closePreview()">&times;</span>
+        <div id="previewArea"></div>
+        <input type="text" id="captionInput" placeholder="Add a caption..." />
+        <button onclick="uploadFileWithCaption()">Send</button>
+      </div>
+    </div>
+
     <div class="no-chat hidden"></div>
     <div class="chat-area hidden">
       <div class="chat-header" id="chatHeader">
@@ -50,8 +59,10 @@
         <!-- Messages will appear here -->
       </div>
       <div class="chat-input">
+        <label for="fileInput" class="file-upload-btn"><i class='bx bx-paperclip'></i></label>
+        <input type="file" id="fileInput" hidden />
         <input type="text" id="messageInput" placeholder="Type your message..." />
-        <button id="sendBtn"><i class='bx  bx-send' ></i></button>
+        <button id="sendBtn"><i class='bx  bx-send'></i></button>
       </div>
     </div>
   </div>
@@ -71,7 +82,7 @@
 
         <label>Username</label>
         <input type="text" id="updateUsername" name="username">
-        
+
         <label>Bio</label>
         <textarea id="updateBio" name="bio" rows="3"></textarea>
 
@@ -110,6 +121,7 @@
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="../scripts/dashboard.js"></script>
   <script src="../scripts/dashboardSearch.js"></script>
+  <script src="../scripts/handlefileinput.js"></script>
   <script src="../scripts/dashboardupdateprofile.js"></script>
 </body>
 

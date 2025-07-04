@@ -499,3 +499,84 @@ input {
 .status-dot.offline {
     background-color: grey;
 }
+
+
+/* File-sharing */
+.chat-image {
+  max-width: 200px;
+  margin-top: 5px;
+  border-radius: 8px;
+  display: block;
+}
+
+.file-link {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: #f0f0f0;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+
+.message-text {
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+.file-link:hover {
+  background-color: #e0e0e0;
+}
+
+/*  */
+.chat-file-image {
+  max-width: 150px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.chat-file-link {
+  text-decoration: underline;
+  color: #0066cc;
+}
+.chat-file-link:hover {
+  color: #004999;
+}
+.message-content a {
+  color: #0066cc;
+  text-decoration: underline;
+  word-break: break-word;
+}
+
+
+/*  */
+.modalS {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99;
+}
+
+.modalS-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.modalS img {
+  max-width: 300px;
+  margin-bottom: 15px;
+}
+
+.modalS input {
+  width: 90%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
