@@ -10,16 +10,20 @@
   <link rel="stylesheet" href="../styles/Ndashboard.css" />
   <link href='https://cdn.boxicons.com/fonts/basic/boxicons.min.css' rel='stylesheet'>
   <link rel="stylesheet" href="../styles/darkmode.css">
+  <link rel="stylesheet" href="../styles/calling.css">
 </head>
 
 <body>
   <audio id="notifysound" src="../public/sounds/standard-whatsapp.mp3" preload="auto"></audio>
+  <audio src="../public/sounds/incoming.mp3" id="incomingsound" preload="auto"></audio>
+  <audio src="../public/sounds/outgoing.mp3" id="outgoingsound" preload="auto"></audio>
   <div class="dashboard-container">
     <!-- Slim Sidebar -->
     <div class="slim-sidebar">
       <img id="userAvatar" src="" alt="Your Profile Image" />
       <i class="bx bx-user" id="showFriends"></i>
       <i class="bx bx-group" id="showRequests"></i>
+      <i class="bx bx-phone" id="showCallHistory"></i>
       <i class="bx bx-edit" onclick="openModal()"></i>
       <i class="bx bx-cog" onclick="openSettings()"></i>
     </div>
@@ -130,14 +134,60 @@
   <!-- Settings Dropdown -->
   <div id="settingsDropdown" class="settings-dropdown hidden">
     <div onclick="toggleDarkMode()">🌓 Dark Mode</div>
-    <div onclick="logout()"><i class='bx  bx-arrow-out-down-right-stroke-square'></i>  Logout</div>
+    <div onclick="logout()"><i class='bx  bx-arrow-out-down-right-stroke-square'></i> Logout</div>
   </div>
 
+  <!-- Incoming Call -->
+  <div id="incomingCallPopup" class="incoming-call-popup hidden">
+    <div class="incoming-call">
+      <img id="incomingcallingAvatar" src="" alt="Friend Avatar" />
+      <p id="callerName"></p>
+      <button id="acceptCallBtn" class="acceptcallBtn">Accept</button>
+      <button id="rejectCallBtn" class="endCallBtn">Reject</button>
+    </div>
+  </div>
+
+  <!-- Outgoing Calling -->
+  <div id="callingModal" class="hidden">
+    <div class="calling-content">
+      <img id="callingAvatar" src="" alt="Friend Avatar" />
+      <p id="callingUsername">Calling...</p>
+      <button id="endCallBtn" class="endCallBtn">End Call</button>
+    </div>
+  </div>
+
+  <!-- OnCall Modal -->
+  <div id="ongoingCallModal" class="hidden call-ui">
+    <div class="Ongoing-call">
+      <img id="ongoingCallAvatar" src="" alt="profile" />
+      <div id="ongoingCallUsername">In call with ...</div>
+      <div id="callTimer">00:00</div>
+      <button id="endCallBtnActive" class="endCallBtn">End Call</button>
+    </div>
+  </div>
+
+  <!-- No Answer Modal -->
+  <div id="noAnswerModal" class="hidden modal-feedback">
+    <p>❌ No Answer</p>
+  </div>
+
+  <!-- Rejected Modal -->
+  <div id="callRejectedModal" class="hidden modal-feedback">
+    <p>❌ Call Rejected</p>
+  </div>
+
+  <!-- Call Ended Modal -->
+  <div id="callEndedModal" class="hidden modal-feedback">
+    <p>📞 Call Ended</p>
+  </div>
+
+  <audio id="remoteAudio" autoplay hidden></audio>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="../scripts/dashboard.js"></script>
   <script src="../scripts/dashboardSearch.js"></script>
   <script src="../scripts/dashboardupdateprofile.js"></script>
+  <script src="../scripts/calling.js"></script>
 
 </body>
 
