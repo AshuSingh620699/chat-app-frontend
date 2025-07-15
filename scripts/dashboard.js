@@ -1061,6 +1061,9 @@ async function selectFriend(friend) {
       <img src="${friend.profileImage || defaultImage}" alt="profile" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
       <span>${friend.username}</span>
     </div>
+    <div class="call-icons" style="display: inline-flex; align-items: center; margin-left: auto;">
+        <i class="bx bx-phone" id="voiceCallIcon" onclick ="startCall('${friend._id}','${friend.username}','${friend.profileImage}')"></i>
+    </div>
   `;
 
     // Click to open user info modal
@@ -1082,8 +1085,10 @@ async function selectFriend(friend) {
 }
 
 function goBackToFriends() {
+    currentChatUser = null
     const chatMessages = document.querySelector('#chatMessages');
-    chatMessages.dataset = ''
+    chatMessages.removeAttribute('data-user')
+    chatMessages.innerHTML = ''
     document.querySelector('.chat-area').classList.remove('show-on-mobile');
     document.querySelector('.chat-input').classList.remove('show-on-mobile');
     document.querySelector('.main-sidebar').classList.remove('hide-on-mobile');
@@ -1263,4 +1268,3 @@ function handleSwipe() {
         navigateGallery(-1);
     }
 }
-
