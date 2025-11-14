@@ -341,3 +341,24 @@ function stopRingtone(type) {
     incomingsound.currentTime = 0; // Reset sound to start
   }
 }
+
+// Storing Call logs
+async function logcall(receiverId, status, callType, startedAt, endedAt, duration){
+  try{
+    const response = await fetch(`https://chat-app-backend-vf79.onrender.com/api/call/log`,{
+      method:'POST',
+      header:{
+        'Content-type':'application/json',
+        'Authorization':`Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        receiverId,
+        status,
+        callType,
+        startedAt,
+        endedAt,
+        duration    
+      })
+    })
+  }catch(error){}
+}
