@@ -751,7 +751,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (isDark) {
         document.body.classList.add('dark-mode');
     }
-
 });
 
 function openModal1(friend) {

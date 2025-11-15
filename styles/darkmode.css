@@ -42,7 +42,8 @@ body.dark-mode .main-sidebar input[type="text"] {
 }
 
 body.dark-mode .friend-item,
-body.dark-mode .search-item {
+body.dark-mode .search-item,
+body.dark-mode .request-item {
   background-color: #1f1f23;
   color: var(--text-color);
   border-bottom: 1px solid var(--border-color);
