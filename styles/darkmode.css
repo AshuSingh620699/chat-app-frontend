@@ -11,7 +11,7 @@
 
 /* Apply dark mode to the whole app */
 body.dark-mode {
-  background-color: var(--bg-color);
+  background-color: var(--bg-color) !important;
   color: var(--text-color);
 }
 
