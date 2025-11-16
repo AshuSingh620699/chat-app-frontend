@@ -133,3 +133,19 @@ body.dark-mode .settings-dropdown div:hover {
 body.dark-mode ::-webkit-scrollbar-thumb {
   background-color: var(--scroll-thumb);
 }
+
+/* Friend-requests */
+body.dark-mode .friend-requests h4 {
+  color: var(--text-color);
+}
+body.dark-mode #friendRequests {
+  border-top: 1px solid var(--border-color);
+  background:none;
+  box-shadow: inset 2px 2px 5px #191a1d, inset -2px -2px 5px #271e1e;;
+}
+body.dark-mode .request-item {
+  background-color: #1f1f23;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: inset 8px 8px 16px var(--text-muted),
+}
