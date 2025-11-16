@@ -149,3 +149,16 @@ body.dark-mode .request-item {
   border-bottom: 1px solid var(--border-color);
   box-shadow: inset 8px 8px 16px var(--text-muted),
 }
+body.dark-mode .request-item:hover {
+  background-color: #2c2c30;
+}
+
+
+body.dark-mode .unread-badge {
+  background-color: #ff4b4b;
+  color: #fff;
+}
+body.dark-mode .request-item button {
+  background-color: #69a2e7;
+  color: #fff;
+}
