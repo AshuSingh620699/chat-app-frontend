@@ -161,6 +161,6 @@ body.dark-mode .unread-badge {
 body.dark-mode .request-item button {
   background-color: #69a2e7;
   color: #fff;
-  margin:auto;
+  margin-left:auto;
   border-radius: 10px;
 }
